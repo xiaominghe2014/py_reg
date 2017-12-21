@@ -12,7 +12,7 @@
 @time: 2017/12/19 下午12:11
 
 """
-import xmreg.const as xreg
+import const as xreg
 
 xreg.repeat_0_or_more = '*'
 xreg.repeat_1_or_more = '+'
