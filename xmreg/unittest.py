@@ -12,6 +12,7 @@
 @time: 2017/12/21 下午2:50
 
 """
+import reg_cpu
 from reg_cpu import RegexCpu as Regex
 from reg_cpu import RegexOption as Option
 
@@ -29,6 +30,11 @@ def main():
     for i in xrange(len(res_other)):
         print(res_other[i][0], res_other[i][1])
         print(search_src[res_other[i][0]:res_other[i][1]])
+    print('\d' == '\\d')
+    print(reg_cpu.char_set('[A-Za-z0-9_]'))
+    print(reg_cpu.repeat_str('abcd{3}'))
+    print(reg_cpu.repeat_str('0123{3,}'))
+    print(reg_cpu.repeat_str('0123{3,10}'))
 
 
 if __name__ == '__main__':

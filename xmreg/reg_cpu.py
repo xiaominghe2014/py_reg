@@ -15,18 +15,89 @@
 
 import const as const
 
+const.repeatAddMax = 1024*16
+
 
 def enum(**enums):
     return type('Enum', (), enums)
 
 
+def from_to(char_from, char_to):
+    res = list()
+    for x in xrange(ord(char_to)-ord(char_from)+1):
+        res.append(chr(x+ord(char_from)))
+    return res
+
+
+def get_char_index(arg_str, char):
+    res = list()
+    for x in xrange(len(arg_str)):
+        if char == arg_str[x]:
+            res.append(x)
+    return res
+
+
+def repeat_str(arg_str):
+    len_str = len(arg_str)
+    if len_str < 4:
+        return [arg_str, 1]
+    if '}' == arg_str[len_str - 1] and '\\' != arg_str[len_str - 2]:
+        for i in xrange(len_str):
+            idx = len_str-i-1
+            if idx and '{' == arg_str[idx] and '\\' != arg_str[idx-1]:
+                new_str = arg_str[idx+1:len_str-1]
+                comma_index = get_char_index(new_str, ',')
+                comma_total = len(comma_index)
+                if not comma_total:
+                    repeat_times = int(new_str)
+                    return [arg_str[:idx]*repeat_times, 1]
+                elif 1 == comma_total:
+                    repeat_min = int(new_str[:comma_index[0]])
+                    repeat_max = comma_index[0] < len(new_str)-1and int(new_str[comma_index[0]+1:len(new_str)]) or const.repeatAddMax
+                    return [arg_str[:idx], repeat_min, repeat_max]
+    return [arg_str, 1]
+
+
+def char_set(arg_str):
+    if '[' == arg_str[0] and ']' == arg_str[len(arg_str)-1]:
+        index_list = list()
+        res = list()
+        for i in xrange(len(arg_str)):
+            if 0 < i - 1:
+                if '-' == arg_str[i] and i + 1 < len(arg_str) - 1:
+                    index_list.append(i)
+                elif i + 1 < len(arg_str) and '-' != arg_str[i-1] and '-' != arg_str[i+1]:
+                    res.append(arg_str[i])
+        for j in xrange(len(index_list)):
+            res.extend(from_to(arg_str[index_list[j]-1], arg_str[index_list[j]+1]))
+        return res
+    else:
+        return list()
+
+
 const.MaxBranch = 100
 const.MaxAtom = 100
 const.RegexKey = '^$().[-]*+?|\\WwSsdbfnrtv'
+const.number = char_set('[0-9]')
+const.blank = '\f,\n,\r,\t,\v'.split(',')
+const.w = char_set('[A-Za-z0-9_]')
+const.reg_range = ['\d', '\D', '\s', '\S', '\w', '\W']
 RegexOption = enum(
     find=0,
     other=1
 )
+
+
+####################################
+#
+# Regex  Atom
+#
+#####################################
+
+class RegexAtom:
+    def __init__(self):
+        self.option = 0
+        self.strings = list()
 
 
 ####################################
@@ -146,6 +217,49 @@ class RegexCpu:
         if reg_option == RegexOption.other:
             return len(self.other(txt_src, txt_target))
         return 0
+
+    @staticmethod
+    def reg_range_map(reg_char):
+        reg_list = [
+            {
+                '\d': const.number,
+                'option': RegexOption.find
+            },
+            {
+                '\D': const.number,
+                'option': RegexOption.other
+            },
+            {
+                '\s': const.blank,
+                'option': RegexOption.find
+            },
+            {
+                '\S': const.blank,
+                'option': RegexOption.other
+            },
+            {
+                '\w': const.w,
+                'option': RegexOption.find
+            },
+            {
+                '\W': const.w,
+                'option': RegexOption.other
+            },
+        ]
+        res = RegexAtom()
+        for i in xrange(len(reg_list)):
+            if reg_char in reg_list[i].keys():
+                res.option = reg_list[i]['option']
+                res.strings = reg_list[i][reg_char]
+                return res
+        return res
+
+    def get_regex_atom(self, reg):
+        if reg[0:2] in const.reg_range:
+            return self.reg_range_map(reg[1])
+        elif '}' == reg[len(reg)-1] and '\\' != reg[len(reg)-2]:
+            return RegexAtom()
+        return RegexAtom()
 
 ####################################
 #
