@@ -31,7 +31,9 @@ xreg.save_end = ')'
 
 
 class RegSign:
-
+    """
+    利用ReSign 和 xreg 可以合成相应正则表达式
+    """
     def __init__(self, reg=''):
         self.version = '0.0.0'
         self.reg = reg

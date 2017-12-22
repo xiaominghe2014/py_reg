@@ -22,6 +22,11 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
+"""
+eg. from_to(0,9) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
+"""
+
+
 def from_to(char_from, char_to):
     res = list()
     for x in xrange(ord(char_to)-ord(char_from)+1):
@@ -60,6 +65,11 @@ def repeat_str(arg_str):
     return [arg_str, 1]
 
 
+"""
+eg. char_set([0-9]) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
+"""
+
+
 def char_set(arg_str):
     if '[' == arg_str[0] and ']' == arg_str[len(arg_str)-1]:
         index_list = list()
@@ -87,7 +97,9 @@ const.reg_range = ['\d', '\D', '\s', '\S', '\w', '\W']
 RegexOption = enum(
     find=0,
     other=1,
-    any=2
+    any=2,
+    maybe=3,
+    repeat=4
 )
 
 
@@ -290,6 +302,8 @@ class RegexCpu:
             res.strings.append([reg[1:-2], 0, 1])
         elif ')' == reg[len(reg)-1] and '(' == reg[0]:
             res.strings.extend(self.char_set_or(reg[1:-1]))
+        else:
+            res.strings.append([reg])
         return res
 
     @staticmethod
@@ -328,10 +342,31 @@ class RegexCpu:
             if len(atom1.strings[0]) == len(atom1.strings[0]) and 1 == len(atom1.strings[0]):
                 for x in atom1.strings:
                     for y in atom2.strings:
-                        res.strings.append('{}{}'.format(x[0], y[0]))
+                        res.strings.append(['{}{}'.format(x[0], y[0])])
                 return [res]
             else:
                 return [atom1, atom2]
+
+    # @staticmethod
+    # def option_atom(opt, atom, repeat_min=0, repeat_max=0, atom_extra=RegexAtom()):
+    #     res = RegexAtom()
+    #     if RegexOption.other == opt:
+    #         if atom.option == RegexOption.other:
+    #             res.option = RegexOption.find
+    #         if atom.option == RegexOption.find:
+    #             res.option = RegexOption.other
+    #         res.strings = atom.strings
+    #     elif opt == RegexOption.repeat:
+    #         for x in xrange(len(atom.strings)):
+    #             x_len = len(atom.strings[x])
+    #             res.strings.append([atom.strings[x][0],
+    #                                 x_len and atom.strings[x][1] * repeat_min or repeat_min,
+    #                                 x_len and atom.strings[x][2] * repeat_max or repeat_max])
+    #     elif opt == RegexOption.maybe:
+    #         for x in atom.strings:
+    #             for y in atom_extra:
+    #                 res.strings.append(['{}{}'.format(x[0], y[0])])
+    #     return res
 
 
 ####################################
