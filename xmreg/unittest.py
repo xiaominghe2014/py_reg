@@ -40,6 +40,9 @@ def main():
     reg_str = ['[A-Za-z0-9_]', 'abcd{3}', 'abcd{3,}', 'abcd{3,10}', '[^0-9]', '(\)?', '(123)*', '(&%)+', '(1|22|23|4)']
     for i in reg_str:
         print_obj_attr(reg.get_regex_atom(i))
+    res = reg.regex_atom_add(reg.get_regex_atom('\d'), reg.get_regex_atom('x{3}'))
+    for atom in res:
+        print_obj_attr(atom)
 
 
 if __name__ == '__main__':

@@ -255,6 +255,7 @@ class RegexCpu:
         res = RegexAtom()
         for i in xrange(len(reg_list)):
             if reg_char in reg_list[i].keys():
+                res.regex = reg_char
                 res.option = reg_list[i]['option']
                 res.strings = reg_list[i][reg_char]
                 return res
@@ -266,7 +267,7 @@ class RegexCpu:
         if len(reg) < 2:
             res.strings.append([reg])
         elif reg[0:2] in const.reg_range:
-            return self.reg_range_map(reg[1])
+            return self.reg_range_map(reg[0:2])
         elif '}' == reg[len(reg)-1] and '\\' != reg[len(reg)-2]:
             c_reg = self.check_other(reg)
             res.option = c_reg and RegexOption.other or RegexOption.find
@@ -288,7 +289,7 @@ class RegexCpu:
         elif '?' == reg[len(reg)-1] and ')' == reg[len(reg)-2] and ')' != reg[0]:
             res.strings.append([reg[1:-2], 0, 1])
         elif ')' == reg[len(reg)-1] and '(' == reg[0]:
-            res.strings.append(self.char_set_or(reg[1:-1]))
+            res.strings.extend(self.char_set_or(reg[1:-1]))
         return res
 
     @staticmethod
@@ -315,6 +316,23 @@ class RegexCpu:
         if not len(result):
             result.append([arg_str])
         return result
+
+    @staticmethod
+    def regex_atom_add(atom1, atom2):
+        if atom1.option != atom2.option:
+            return [atom1, atom2]
+        else:
+            res = RegexAtom()
+            res.regex = '({})({})'.format(atom1.regex, atom2.regex)
+            res.option = atom1.option
+            if len(atom1.strings[0]) == len(atom1.strings[0]) and 1 == len(atom1.strings[0]):
+                for x in atom1.strings:
+                    for y in atom2.strings:
+                        res.strings.append('{}{}'.format(x[0], y[0]))
+                return [res]
+            else:
+                return [atom1, atom2]
+
 
 ####################################
 #
