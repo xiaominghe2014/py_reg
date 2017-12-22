@@ -12,9 +12,14 @@
 @time: 2017/12/21 下午2:50
 
 """
-import reg_cpu
+# import reg_cpu
 from reg_cpu import RegexCpu as Regex
 from reg_cpu import RegexOption as Option
+
+
+def print_obj_attr(obj):
+    for key in obj.__dict__:
+        print('%s:%s' % (key, obj.__dict__[key]))
 
 
 def main():
@@ -31,10 +36,10 @@ def main():
         print(res_other[i][0], res_other[i][1])
         print(search_src[res_other[i][0]:res_other[i][1]])
     print('\d' == '\\d')
-    print(reg_cpu.char_set('[A-Za-z0-9_]'))
-    print(reg_cpu.repeat_str('abcd{3}'))
-    print(reg_cpu.repeat_str('0123{3,}'))
-    print(reg_cpu.repeat_str('0123{3,10}'))
+    reg = Regex()
+    reg_str = ['[A-Za-z0-9_]', 'abcd{3}', 'abcd{3,}', 'abcd{3,10}', '[^0-9]', '(\)?', '(123)*', '(&%)+', '(1|22|23|4)']
+    for i in reg_str:
+        print_obj_attr(reg.get_regex_atom(i))
 
 
 if __name__ == '__main__':

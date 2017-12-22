@@ -1,2 +1,8 @@
 # py_reg
-python正则算法（业余修改中）
+python正则算法
+
+## test
+```bash
+python xmreg/unittest.py
+```
+

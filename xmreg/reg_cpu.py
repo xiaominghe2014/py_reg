@@ -15,7 +15,7 @@
 
 import const as const
 
-const.repeatAddMax = 1024*16
+const.repeatAddMax = 1024
 
 
 def enum(**enums):
@@ -25,7 +25,7 @@ def enum(**enums):
 def from_to(char_from, char_to):
     res = list()
     for x in xrange(ord(char_to)-ord(char_from)+1):
-        res.append(chr(x+ord(char_from)))
+        res.append([chr(x+ord(char_from))])
     return res
 
 
@@ -53,7 +53,9 @@ def repeat_str(arg_str):
                     return [arg_str[:idx]*repeat_times, 1]
                 elif 1 == comma_total:
                     repeat_min = int(new_str[:comma_index[0]])
-                    repeat_max = comma_index[0] < len(new_str)-1and int(new_str[comma_index[0]+1:len(new_str)]) or const.repeatAddMax
+                    repeat_max = (comma_index[0] < len(new_str)-1 and
+                                  int(new_str[comma_index[0]+1:len(new_str)]) or
+                                  const.repeatAddMax+repeat_min)
                     return [arg_str[:idx], repeat_min, repeat_max]
     return [arg_str, 1]
 
@@ -67,7 +69,7 @@ def char_set(arg_str):
                 if '-' == arg_str[i] and i + 1 < len(arg_str) - 1:
                     index_list.append(i)
                 elif i + 1 < len(arg_str) and '-' != arg_str[i-1] and '-' != arg_str[i+1]:
-                    res.append(arg_str[i])
+                    res.append([arg_str[i]])
         for j in xrange(len(index_list)):
             res.extend(from_to(arg_str[index_list[j]-1], arg_str[index_list[j]+1]))
         return res
@@ -84,7 +86,8 @@ const.w = char_set('[A-Za-z0-9_]')
 const.reg_range = ['\d', '\D', '\s', '\S', '\w', '\W']
 RegexOption = enum(
     find=0,
-    other=1
+    other=1,
+    any=2
 )
 
 
@@ -96,7 +99,10 @@ RegexOption = enum(
 
 class RegexAtom:
     def __init__(self):
+        self.regex = ''
         self.option = 0
+        # strings is a charset(list) ,
+        #  0 is string, 1 is min repeat times, 2 is max repeat times
         self.strings = list()
 
 
@@ -255,11 +261,60 @@ class RegexCpu:
         return res
 
     def get_regex_atom(self, reg):
-        if reg[0:2] in const.reg_range:
+        res = RegexAtom()
+        res.regex = reg
+        if len(reg) < 2:
+            res.strings.append([reg])
+        elif reg[0:2] in const.reg_range:
             return self.reg_range_map(reg[1])
         elif '}' == reg[len(reg)-1] and '\\' != reg[len(reg)-2]:
-            return RegexAtom()
-        return RegexAtom()
+            c_reg = self.check_other(reg)
+            res.option = c_reg and RegexOption.other or RegexOption.find
+            repeat_list = repeat_str(c_reg or reg)
+            if 2 == len(repeat_list):
+                res.strings.append([repeat_list[0]])
+            if 3 == len(repeat_list):
+                    res.strings.append([repeat_list[0], repeat_list[1], repeat_list[2]])
+            return res
+        elif ']' == reg[len(reg)-1] and '\\' != reg[len(reg)-2]:
+            c_reg = self.check_other(reg)
+            res.option = c_reg and RegexOption.other or RegexOption.find
+            res.strings = char_set(c_reg or reg)
+            return res
+        elif '*' == reg[len(reg)-1] and ')' == reg[len(reg)-2] and ')' != reg[0]:
+            res.strings.append([reg[1:-2], 0, const.repeatAddMax])
+        elif '+' == reg[len(reg)-1] and ')' == reg[len(reg)-2] and ')' != reg[0]:
+            res.strings.append([reg[1:-2], 1, const.repeatAddMax])
+        elif '?' == reg[len(reg)-1] and ')' == reg[len(reg)-2] and ')' != reg[0]:
+            res.strings.append([reg[1:-2], 0, 1])
+        elif ')' == reg[len(reg)-1] and '(' == reg[0]:
+            res.strings.append(self.char_set_or(reg[1:-1]))
+        return res
+
+    @staticmethod
+    def check_other(reg):
+        if '^' == reg[1]:
+            return reg[0]+reg[2:]
+        return ''
+
+    @staticmethod
+    def char_set_or(arg_str):
+        dem = '|'
+        res = arg_str.split(dem)
+        start_index = 0
+        while start_index < len(res)-1:
+            s_len = len(res[start_index])
+            if '\\' == res[start_index][s_len-1]:
+                res[start_index+1] = res[start_index]+res[start_index+1]
+                res.remove(res[start_index])
+            else:
+                start_index += 1
+        result = list()
+        for value in res:
+            result.append([value])
+        if not len(result):
+            result.append([arg_str])
+        return result
 
 ####################################
 #
