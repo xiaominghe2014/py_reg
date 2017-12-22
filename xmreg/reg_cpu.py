@@ -110,6 +110,9 @@ RegexOption = enum(
 #####################################
 
 class RegexAtom:
+
+    __slots__ = ['regex', 'option', 'strings']
+
     def __init__(self):
         self.regex = ''
         self.option = 0
