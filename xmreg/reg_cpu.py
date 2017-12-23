@@ -22,15 +22,16 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
-"""
-eg. from_to(0,9) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
-"""
-
-
 def from_to(char_from, char_to):
+    """
+    eg. from_to(0,9) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
+    """
     res = list()
-    for x in xrange(ord(char_to)-ord(char_from)+1):
-        res.append([chr(x+ord(char_from))])
+    if (str == type(char_from) == type(char_to) and
+            1 == len(char_from) == len(char_to) and
+            ord(char_from) < ord(char_to)):
+        for x in xrange(ord(char_to)-ord(char_from)+1):
+            res.append([chr(x+ord(char_from))])
     return res
 
 
@@ -65,12 +66,10 @@ def repeat_str(arg_str):
     return [arg_str, 1]
 
 
-"""
-eg. char_set([0-9]) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
-"""
-
-
 def char_set(arg_str):
+    """
+    eg. char_set([0-9]) means [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['6'], ['7'], ['8'], ['9']]
+    """
     if '[' == arg_str[0] and ']' == arg_str[len(arg_str)-1]:
         index_list = list()
         res = list()
@@ -342,7 +341,7 @@ class RegexCpu:
             res = RegexAtom()
             res.regex = '({})({})'.format(atom1.regex, atom2.regex)
             res.option = atom1.option
-            if len(atom1.strings[0]) == len(atom1.strings[0]) and 1 == len(atom1.strings[0]):
+            if 1 == len(atom2.strings[0]) == len(atom1.strings[0]):
                 for x in atom1.strings:
                     for y in atom2.strings:
                         res.strings.append(['{}{}'.format(x[0], y[0])])
