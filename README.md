@@ -3,6 +3,6 @@ python正则算法
 
 ## test
 ```bash
-python xmreg/unittest.py
+python xmreg/test.py
 ```
 
